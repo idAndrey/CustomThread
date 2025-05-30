@@ -1,0 +1,28 @@
+[
+  {
+    "jobName": "DataProcessingJob",
+    "jobId": 845,
+    "taskCount": 5,
+    "duration": 5,
+    "interval": 2,
+    "timeUnit": "SECONDS"
+  },
+  {
+    "jobName": "ReportGenerationJob",
+    "jobId": 317,
+    "taskCount": 3,
+    "duration": 10,
+    "interval": 1,
+    "timeUnit": "MINUTES"
+  },
+
+  {
+    "jobName": "DemonstrationJob",
+    "jobId": 549,
+    "taskCount": 100,
+    "duration": 100,
+    "interval": 1,
+    "timeUnit": "MILLISECONDS"
+  }
+
+]
