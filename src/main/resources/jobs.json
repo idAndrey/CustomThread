@@ -5,7 +5,8 @@
     "taskCount": 5,
     "duration": 5,
     "interval": 2,
-    "timeUnit": "SECONDS"
+    "timeUnit": "SECONDS",
+    "executorType": "CUSTOM"
   },
   {
     "jobName": "ReportGenerationJob",
@@ -13,16 +14,18 @@
     "taskCount": 3,
     "duration": 10,
     "interval": 1,
-    "timeUnit": "MINUTES"
+    "timeUnit": "MINUTES",
+    "executorType": "CUSTOM"
   },
 
   {
     "jobName": "DemonstrationJob",
     "jobId": 549,
-    "taskCount": 100,
+    "taskCount": 1000,
     "duration": 100,
-    "interval": 1,
-    "timeUnit": "MILLISECONDS"
+    "interval": 10,
+    "timeUnit": "MILLISECONDS",
+    "executorType": "CUSTOM"
   }
 
 ]

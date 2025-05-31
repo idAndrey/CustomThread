@@ -39,32 +39,32 @@ public class CustomExecutorService {
         return config;
     }
 
-    public CustomThreadExecutor getCustomThreadExecutor(){
-
-        CustomThreadExecutor executor = new CustomThreadExecutor(
-                Integer.parseInt(config.getProperty("corePoolSize")),
-                Integer.parseInt(config.getProperty("maxPoolSize")),
-                Integer.parseInt(config.getProperty("queueSize")),
-                Long.parseLong(config.getProperty("keepAliveTime")),
-                TimeUnit.valueOf(config.getProperty("timeUnit")),
-                Integer.parseInt(config.getProperty("minSpareThreads")),
-                BalanceStrategy.valueOf(config.getProperty("balanceStrategy")),
-                RejectionPolicy.valueOf(config.getProperty("rejectionPolicy"))
-        );
-
-        return executor;
-    }
-
-    public ExecutorService getStandardThreadExecutor(){
-        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(Integer.parseInt(config.getProperty("queueSize")));
-        ExecutorService executor = new ThreadPoolExecutor(
-                Integer.parseInt(config.getProperty("corePoolSize")),
-                Integer.parseInt(config.getProperty("maxPoolSize")),
-                Long.parseLong(config.getProperty("keepAliveTime")),
-                TimeUnit.valueOf(config.getProperty("timeUnit")),
-                workQueue,
-                new ThreadPoolExecutor.AbortPolicy()
-        );
+//    public CustomThreadExecutor getCustomThreadExecutor(){
+//
+//        CustomThreadExecutor executor = new CustomThreadExecutor(
+//                Integer.parseInt(config.getProperty("corePoolSize")),
+//                Integer.parseInt(config.getProperty("maxPoolSize")),
+//                Integer.parseInt(config.getProperty("queueSize")),
+//                Long.parseLong(config.getProperty("keepAliveTime")),
+//                TimeUnit.valueOf(config.getProperty("timeUnit")),
+//                Integer.parseInt(config.getProperty("minSpareThreads")),
+//                BalanceStrategy.valueOf(config.getProperty("balanceStrategy")),
+//                RejectionPolicy.valueOf(config.getProperty("rejectionPolicy"))
+//        );
+//
+//        return executor;
+//    }
+//
+//    public ExecutorService getStandardThreadExecutor(){
+//        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(Integer.parseInt(config.getProperty("queueSize")));
+//        ExecutorService executor = new ThreadPoolExecutor(
+//                Integer.parseInt(config.getProperty("corePoolSize")),
+//                Integer.parseInt(config.getProperty("maxPoolSize")),
+//                Long.parseLong(config.getProperty("keepAliveTime")),
+//                TimeUnit.valueOf(config.getProperty("timeUnit")),
+//                workQueue,
+//                new ThreadPoolExecutor.AbortPolicy()
+//        );
 
 //        CustomThreadExecutor executor = new CustomThreadExecutor(
 //                Integer.parseInt(config.getProperty("corePoolSize")),
@@ -76,9 +76,9 @@ public class CustomExecutorService {
 //                BalanceStrategy.valueOf(config.getProperty("balanceStrategy")),
 //                RejectionPolicy.valueOf(config.getProperty("rejectionPolicy"))
 //        );
-
-        return executor;
-    }
+//
+//        return executor;
+//    }
 
 
 }

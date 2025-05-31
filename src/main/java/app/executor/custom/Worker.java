@@ -61,12 +61,12 @@ public class Worker extends Thread {
 
     public boolean offerTaskWrapped(Runnable runnable) {
         Task task = (Task) runnable;
-        System.out.println("\n FROM offerTaskWrapped\ntaskId = " + task.getName() );
+//        System.out.println("\n FROM offerTaskWrapped\ntaskId = " + task.getName() );
 
         boolean isOffered = workerStrategies.offerTask(this, task);
 
-        System.out.println("\nFROM offerTaskWRAPPED\n[" + this.workerName + "]" +
-                " Queue #" + (workerId - 1) + ": " + getTaskQueue().toString() + "\n");
+//        System.out.println("\nFROM offerTaskWRAPPED\n[" + this.workerName + "]" +
+//                " Queue #" + (workerId - 1) + ": " + getTaskQueue().toString() + "\n");
 
         return isOffered;
     }
@@ -121,5 +121,9 @@ public class Worker extends Thread {
 //            workers.remove(this);
         }
     }
+//    public BlockingQueue getTaskQueue(){
+//
+//        return taskQueue;
+//    }
 }
 

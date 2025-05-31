@@ -24,47 +24,10 @@ public class Application {
 
     public static void main(String[] args) {
 
-        Properties config = new Properties();
-        try (InputStream is = Application.class.getClassLoader()
-                .getResourceAsStream("executor.properties")) {
-            if (is != null) {
-                config.load(is);
-            }
-        } catch (IOException e) {
 
-            logger.error("Failed to get executor settings: {}", e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-//        CustomThreadExecutor customExecutor = new CustomThreadExecutor(
-//                Integer.parseInt(config.getProperty("corePoolSize")),
-//                Integer.parseInt(config.getProperty("maxPoolSize")),
-//                Integer.parseInt(config.getProperty("queueSize")),
-//                Long.parseLong(config.getProperty("keepAliveTime")),
-//                TimeUnit.valueOf(config.getProperty("timeUnit")),
-//                Integer.parseInt(config.getProperty("minSpareThreads")),
-//                BalanceStrategy.valueOf(config.getProperty("balanceStrategy")),
-//                RejectionPolicy.valueOf(config.getProperty("rejectionPolicy"))
-//        );
-
-        CustomExecutorService customExecutorService = new CustomExecutorService("executor.properties");
-
-//        customExecutor = CustomThreadExecutor.getCustomThreadExecutor();
-//        ExecutorService standardExecutor = new ThreadPoolExecutor();
-
-//        Job job1 = new Job("job_1",100,TimeUnit.MILLISECONDS,100,customExecutor);
-//        job1.start();
 
         List<Job> jobs = new ArrayList<>();
-        try {
-            jobs = JobsReader.readJobsFromResources("jobs.json");
-        } catch (IOException e) {
-            logger.error("Failed to get job list: {}", e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
-//            throw new RuntimeException(e);
-        }
+        jobs = JobsReader.readJobsFromResources("jobs.json");
         ConcurrentMap<Job, JobResult> jobResults = new ConcurrentHashMap<>();
 
         Job job = jobs.get(2);
@@ -95,14 +58,17 @@ public class Application {
 //            job0.setExecutorType(ExecutorType.CUSTOM);
 //            job0.setTaskExecutor(ExecutorType.CUSTOM);
 
-            job.setExecutorType(ExecutorType.STANDARD);
+//            job.setExecutorType(ExecutorType.STANDARD);
             job.setTaskExecutor(ExecutorType.STANDARD);
+
+//            job.setExecutorType(ExecutorType.CUSTOM);
+//            job.setTaskExecutor(ExecutorType.CUSTOM);
 
             Future<JobResult> result = jobExecutor.submit(job);
 
             try {
                 jobResults.put(job,result.get());
-//                    job.printJobResult(result.get());
+                job.printJobResult(jobResults.get(job));
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
@@ -136,6 +102,8 @@ public class Application {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+
+//        job.printTaskStatus();
 
         System.out.println("\n\n\nFINISHED");
 //        Job job = jobs.get(0); //.customExecutor.shutdown();

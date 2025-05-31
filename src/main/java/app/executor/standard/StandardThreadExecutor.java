@@ -24,7 +24,7 @@ public class StandardThreadExecutor implements CustomExecutor {
     ThreadPoolExecutor executor;
     BlockingQueue<Runnable> workQueue;
 
-    ThreadFactory threadFactory = new CustomThreadFactory();
+    ThreadFactory threadFactory = new StandardThreadFactory("Worker-");
 
     public StandardThreadExecutor(){
 

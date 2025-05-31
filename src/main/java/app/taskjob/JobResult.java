@@ -4,6 +4,7 @@ import app.executor.factory.ExecutorType;
 
 public class JobResult {
 
+    public int completedTaskCount = 0;
     public int rejectedTaskCount = 0;
     public int abortedTaskCount = 0;
     public int discardedTaskCount = 0;
@@ -13,7 +14,8 @@ public class JobResult {
 
     public ExecutorType executorType;
 
-    public JobResult(int rejectedTaskCount, int abortedTaskCount, int discardedTaskCount, long startTime, long endTime, ExecutorType executorType) {
+    public JobResult(int completedTaskCount, int rejectedTaskCount, int abortedTaskCount, int discardedTaskCount, long startTime, long endTime, ExecutorType executorType) {
+        this.completedTaskCount = completedTaskCount;
         this.rejectedTaskCount = rejectedTaskCount;
         this.abortedTaskCount = abortedTaskCount;
         this.discardedTaskCount = discardedTaskCount;
@@ -28,6 +30,7 @@ public class JobResult {
 
 
         return "JobResult{" +
+                "completedTaskCount=" + completedTaskCount +
                 "rejectedTaskCount=" + rejectedTaskCount +
                 ", abortedTaskCount=" + abortedTaskCount +
                 ", discardedTaskCount=" + discardedTaskCount +

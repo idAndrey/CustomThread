@@ -1,19 +1,17 @@
-package app.executor.factory;
+package app.executor.standard;
 
+import app.executor.factory.CustomThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class CustomThreadFactory implements ThreadFactory {
+public class StandardThreadFactory implements ThreadFactory {
+    private static final Logger logger = LoggerFactory.getLogger(StandardThreadFactory.class);
 
-    private static final Logger logger = LoggerFactory.getLogger(CustomThreadFactory.class);
-
-//    private final int workerQueueSize;
+    //    private final int workerQueueSize;
     private final ThreadFactory defaultThreadFactory;// = Executors.defaultThreadFactory();
 
     //thread creation counter
@@ -22,24 +20,24 @@ public class CustomThreadFactory implements ThreadFactory {
     private String prefix = "";
 
 
-    public CustomThreadFactory(int workerQueueSize, ThreadFactory defaultThreadFactory) {
+    public StandardThreadFactory(int workerQueueSize, ThreadFactory defaultThreadFactory) {
 //        this.workerQueueSize = workerQueueSize;
 //        this.defaultThreadFactory = defaultThreadFactory;
         this.defaultThreadFactory = Executors.defaultThreadFactory();
     }
 
-    public CustomThreadFactory(int workerQueueSize) {
+    public StandardThreadFactory(int workerQueueSize) {
 //        this.workerQueueSize = workerQueueSize;
         this.defaultThreadFactory = Executors.defaultThreadFactory();
     }
 
-    public CustomThreadFactory() {
+    public StandardThreadFactory() {
 //        this.workerQueueSize = workerQueueSize;
         this.defaultThreadFactory = Executors.defaultThreadFactory();
 //        this.counter = new AtomicLong(0);
     }
 
-    public CustomThreadFactory(String prefix) {
+    public StandardThreadFactory(String prefix) {
 //        this.workerQueueSize = workerQueueSize;
         this.defaultThreadFactory = Executors.defaultThreadFactory();
 //        this.counter = new AtomicLong(0);

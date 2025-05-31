@@ -4,17 +4,20 @@ import app.Application;
 
 
 import app.executor.factory.CustomExecutor;
+import app.taskjob.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.stream.Collectors;
 
 public class CustomThreadExecutor implements CustomExecutor {
 
@@ -151,21 +154,28 @@ public class CustomThreadExecutor implements CustomExecutor {
                                 " isRunning = " + worker.isRunning() +
                                 "\n");
 //            executorStrategy.execute();0
+
+
+
+
             if(worker.isRunning()) {
 
                 boolean offered = worker.offerTaskWrapped(command);
                 if (offered) {
                     logger.info("[Pool] Task accepted into queue #{}: {}", index, command.toString());
 
-                    System.out.println("[Pool] Queue #" + index + ": " + worker.getTaskQueue().toString());
-
-                    //                System.out.println("[Pool] Task accepted into queue #" + index + ": " + command.toString());
+//                    System.out.println("[Pool] Queue #" + index + ": " + worker.getTaskQueue().toString());
+                    System.out.println("[Pool] Queue #" + index + ": " + worker.getTaskQueue().stream()
+                            .map(r -> (Task)r)
+                            .sorted(Comparator.comparingInt(Task::getId).reversed())
+                            .map(task -> "{" + task.getId() + "}")
+                            .collect(Collectors.joining(", ", "[", "]")));
                 } else {
                     switch (rejectionPolicy) {
                         case CALLER_RUNS_POLICY -> {
                             logger.info("[Rejected] Task {} was rejected due to overload! Executing in caller thread.", command.toString());
                             command.run();
-                            throw new RejectedExecutionException("Queue #" + index + " is overloaded. Task was rejected.");
+//                            throw new RejectedExecutionException("Queue #" + index + " is overloaded. Task was rejected.");
                         }
                         case DISCARD_POLICY -> {
                             logger.info("[Discarded] Task {} was discarded due to overload!", command.toString());
@@ -173,7 +183,8 @@ public class CustomThreadExecutor implements CustomExecutor {
                         }
                         case ABORT_POLICY -> {
                             logger.info("[Aborted] Task {} was aborted due to overload!", command.toString());
-                            throw new DiscardedExecutionException("Queue #" + index + " is overloaded. Task was aborted.");
+//                            throw new DiscardedExecutionException("Queue #" + index + " is overloaded. Task was aborted.");
+                            throw new RejectedExecutionException("Queue #" + index + " is overloaded. Task was rejected.");
                         }
 
                     }
