@@ -213,14 +213,21 @@ public class Job implements Callable, PropertyChangeListener {
         double avgTime = executedTasks > 0 ? (double) totalTime / executedTasks : 0.0;
         DecimalFormat df = new DecimalFormat("#.#######");
 
-        logger.info("=============== Result job processing info ===============");
-        logger.info("📊 Job mane: {}, task count: {}, task duration: {} {}.", jobName, taskCount, duration, unitNames[timeUnit.ordinal()]);
+        logger.info("                                                                ");
+        logger.info("============= Result job processing info =============");
+        logger.info("📊 Job mane: {}, Executor type: {}", jobName, executorType);
+        logger.info("Task count: {}, Duration: {} {}, Interval: {} {}",  taskCount, duration, unitNames[timeUnit.ordinal()], interval, unitNames[timeUnit.ordinal()]);
+        logger.info("-------------------------------------------------");
         logger.info("⏱ Total time: {} ms", totalTime);
         logger.info("✅ Completed tasks: {}", executedTasks);
         logger.info("❌ Aborted tasks: {}", jobResult.abortedTaskCount);
         logger.info("❌ Rejected tasks: {}", jobResult.rejectedTaskCount);
         logger.info("❌ Discarded tasks: {}", jobResult.discardedTaskCount);
         logger.info("⏲ Average time per task: {} ms", df.format(avgTime));
+        logger.info("📚 Total queue size: {} tasks", taskExecutor.getTotalQueueSize());
+        logger.info("-------------------------------------------------\n");
+
+
     }
 
     public String getJobName() {

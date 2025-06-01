@@ -65,14 +65,19 @@ public class StandardThreadExecutor implements CustomExecutor {
     }
 
     @Override
+    public int getTotalQueueSize(){
+        return maxQueueSize.get();
+    }
+
+    @Override
     public void execute(Runnable command) {
 
-//        int currentQueueSize = executor.getQueue().size();
-//
-//        if(maxQueueSize.get() < currentQueueSize){
-//            maxQueueSize.set(currentQueueSize);
-//        };
-//
+        int currentQueueSize = executor.getQueue().size();
+
+        if(maxQueueSize.get() < currentQueueSize){
+            maxQueueSize.set(currentQueueSize);
+        };
+
 //        logger.info("Executor state: ActiveThreads={}, QueueSize={}, PoolSize={}",
 //                executor.getActiveCount(),
 //                executor.getQueue().size(),

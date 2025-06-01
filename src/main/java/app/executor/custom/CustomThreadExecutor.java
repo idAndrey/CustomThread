@@ -66,6 +66,10 @@ public class CustomThreadExecutor implements CustomExecutor {
         }
     }
 
+    public int getTotalQueueSize(){
+        return mapWorkerQueue.values().stream().mapToInt(Integer::intValue).sum();
+    }
+
     private Properties getConfig(String fileName){
         Properties config = new Properties();
         try (InputStream is = Application.class.getClassLoader()

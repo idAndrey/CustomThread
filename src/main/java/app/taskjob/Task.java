@@ -73,7 +73,7 @@ public class Task implements Runnable{
                     try{
                         this.support.firePropertyChange(pce);
 
-                        System.out.println("STATUS notification is fired. " + getName());
+//                        System.out.println("STATUS notification is fired. " + getName());
 
 //                        System.out.println("STATUS notification is fired. " + getName() +
 ////                        "\nCurrent executor name: " + notificationExecutor .getName() +
@@ -125,7 +125,9 @@ public class Task implements Runnable{
         this.notificationExecutor.execute(()->{
             try{
                 this.support.firePropertyChange(pce);
-                System.out.println("STATE notification is fired. " + getName());
+
+//                System.out.println("STATE notification is fired. " + getName());
+
 //                System.out.println("STATE notification is fired. " + getName() +
 ////                        "\nCurrent executor name: " + notificationExecutor .getName() +
 //                        "\nCurrent thread name: " + Thread.currentThread().getName() +

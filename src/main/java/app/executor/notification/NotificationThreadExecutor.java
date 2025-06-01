@@ -28,6 +28,11 @@ public class NotificationThreadExecutor implements CustomExecutor {
     }
 
     @Override
+    public int getTotalQueueSize(){
+        return workQueue.size();
+    }
+
+    @Override
     public void execute(Runnable command) {
         executor.execute(command);
     }
