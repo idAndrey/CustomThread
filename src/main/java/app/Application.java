@@ -59,10 +59,10 @@ public class Application {
 //            job0.setTaskExecutor(ExecutorType.CUSTOM);
 
 //            job.setExecutorType(ExecutorType.STANDARD);
-            job.setTaskExecutor(ExecutorType.STANDARD);
+//            job.setTaskExecutor(ExecutorType.STANDARD);
 
 //            job.setExecutorType(ExecutorType.CUSTOM);
-//            job.setTaskExecutor(ExecutorType.CUSTOM);
+            job.setTaskExecutor(ExecutorType.CUSTOM);
 
             Future<JobResult> result = jobExecutor.submit(job);
 

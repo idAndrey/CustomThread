@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.util.Comparator;
 import java.util.Properties;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class StandardThreadExecutor implements CustomExecutor {
@@ -23,6 +24,8 @@ public class StandardThreadExecutor implements CustomExecutor {
 
     ThreadPoolExecutor executor;
     BlockingQueue<Runnable> workQueue;
+
+    private final AtomicInteger maxQueueSize;
 
     ThreadFactory threadFactory = new StandardThreadFactory("Worker-");
 
@@ -40,6 +43,8 @@ public class StandardThreadExecutor implements CustomExecutor {
                 threadFactory,
                 new ThreadPoolExecutor.AbortPolicy()
         );
+
+        this.maxQueueSize = new AtomicInteger(0);
     }
 
     private Properties getConfig(String fileName){
@@ -62,6 +67,13 @@ public class StandardThreadExecutor implements CustomExecutor {
     @Override
     public void execute(Runnable command) {
 //        executor.execute(command);
+
+        int currentQueueSize = executor.getQueue().size();
+
+        if(maxQueueSize.get() < currentQueueSize){
+            maxQueueSize.set(currentQueueSize);
+        };
+
         logger.info("Executor state: ActiveThreads={}, QueueSize={}, PoolSize={}",
                 executor.getActiveCount(),
                 executor.getQueue().size(),
@@ -87,7 +99,8 @@ public class StandardThreadExecutor implements CustomExecutor {
     @Override
     public void shutdown() {
         executor.shutdown();
-        logger.info("[Standard Executor] Shutdown initiated.");
+//        logger.info("[Standard Executor] Shutdown initiated.");
+        logger.info("[Standard Executor] Shutdown initiated. MaxQueueSize = {}", maxQueueSize.get());
     }
 
     @Override

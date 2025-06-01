@@ -281,31 +281,12 @@ public class Job implements Callable, PropertyChangeListener {
                 TaskState oldValue = (TaskState) evt.getOldValue();
                 TaskState newValue = (TaskState) evt.getNewValue();
 
-                System.out.println("STATE changed." +
-                        "\nCurrent task = " + task.getName() + " New value = " + task.state +
-                        "\ncurrentTaskCountAtomic = " + currentTaskCountAtomic.get() +
-                        "\ncompletedTaskCountAtomic = " + completedTaskCountAtomic.get() +
-                        "\nrejectedTaskCountAtomic = " + rejectedTaskCountAtomic.get() +
-                        "\n");
-
-//                System.out.println("\n\nFROM propertyChange" + " task = " + task.getName() +
-//                        "\nCurrent thread: " + Thread.currentThread().getName() +
-//                        "\npropertyName: " + propertyName +
-//                        "\noldValue: " + oldValue +
-//                        "\nnewValue: " + newValue +
-//                        "\ntask: " + task.getName() +
-////                        "\nOldValue = NEW : " + oldValue.equals(TaskState.NEW) + " and " +
-////                        "NewValue = OFFERED : " + newValue.equals(TaskState.OFFERED) +
-//                        "\n"
-//                );
-
-//                if(evt.getOldValue().equals(TaskState.NEW) && evt.getNewValue().equals(TaskState.OFFERED)){
-//
-//                    offeredTaskCount.incrementAndGet();
-//                    System.out.println("\nofferedTaskCount = " + offeredTaskCount);
-//                    if(offeredTaskCount.get() == taskCount) System.out.println("\n\n\nJob STARTED\n\n");
-//                }
-
+//                System.out.println("STATE changed." +
+//                        "\nCurrent task = " + task.getName() + " New value = " + task.state +
+//                        "\ncurrentTaskCountAtomic = " + currentTaskCountAtomic.get() +
+//                        "\ncompletedTaskCountAtomic = " + completedTaskCountAtomic.get() +
+//                        "\nrejectedTaskCountAtomic = " + rejectedTaskCountAtomic.get() +
+//                        "\n");
             }
             case "status" -> {
                 TaskStatus oldValue = (TaskStatus) evt.getOldValue();
@@ -318,14 +299,12 @@ public class Job implements Callable, PropertyChangeListener {
                     completedTaskCountAtomic.incrementAndGet();
                 }
 
-                System.out.println("STATUS changed." +
-                        "\nCurrent task = " + task.getName() + " New value = " + task.status +
-                        "\ncurrentTaskCountAtomic = " + currentTaskCountAtomic.get() +
-                        "\ncompletedTaskCountAtomic = " + completedTaskCountAtomic.get() +
-                        "\nrejectedTaskCountAtomic = " + rejectedTaskCountAtomic.get() +
-                        "\n");
-//                System.out.println("\nrejectedTaskCountAtomic = " + rejectedTaskCountAtomic.get() +
-//                        " task = " + task.getName());
+//                System.out.println("STATUS changed." +
+//                        "\nCurrent task = " + task.getName() + " New value = " + task.status +
+//                        "\ncurrentTaskCountAtomic = " + currentTaskCountAtomic.get() +
+//                        "\ncompletedTaskCountAtomic = " + completedTaskCountAtomic.get() +
+//                        "\nrejectedTaskCountAtomic = " + rejectedTaskCountAtomic.get() +
+//                        "\n");
             }
         }
 

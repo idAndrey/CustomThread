@@ -22,8 +22,8 @@
     "jobName": "DemonstrationJob",
     "jobId": 549,
     "taskCount": 1000,
-    "duration": 100,
-    "interval": 10,
+    "duration": 15,
+    "interval": 1,
     "timeUnit": "MILLISECONDS",
     "executorType": "CUSTOM"
   }
