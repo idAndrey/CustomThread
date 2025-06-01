@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Worker extends Thread {
 
@@ -24,6 +25,9 @@ public class Worker extends Thread {
 
     private final CustomThreadExecutor pool;
     private final BlockingQueue<Runnable> taskQueue;
+//    private final AtomicInteger maxWorkerQueueSize;
+    private int maxWorkerQueueSize;
+
 //    private final RunnableExecutor strategyExecutor;
     private final WorkerStrategies workerStrategies;
 
@@ -37,6 +41,8 @@ public class Worker extends Thread {
         this.timeUnit = timeUnit;
 //        this.strategyExecutor = new RunnableExecutor();
         this.workerStrategies = new WorkerStrategies();
+//        this.maxQueueSize = new AtomicInteger(0);
+        this.maxWorkerQueueSize = 0;
 
     }
 
@@ -57,6 +63,9 @@ public class Worker extends Thread {
 
     public boolean isRunning() {
         return isRunning;
+    }
+    public void setRunning(boolean isRunning){
+        this.isRunning = isRunning;
     }
 
     public boolean offerTaskWrapped(Runnable runnable) {
@@ -84,18 +93,26 @@ public class Worker extends Thread {
     public void run() {
         isRunning = true;
         logger.info("{} is started", workerName);
+
+//        int currentQueueSize = 0;
+
         try {
             while (isRunning) {
                 isIdle = true;
 
+                pool.checkMaxPoolQueueSize(workerId, checkMaxWorkerQueueSize(taskQueue.size()));
+
                 Runnable task = taskQueue.poll(keepAliveTime, timeUnit);
-                isIdle = false;
+
+                int currentWorkerCount;
 
                 if (task != null) {
 
                     if (!isRunning) {
                         break;
                     }
+
+                    isIdle = false;
 
                     logger.info("{} executes {}", workerName, task.toString());
 
@@ -105,12 +122,19 @@ public class Worker extends Thread {
                         logger.debug("{} raise exception on task {}. Message: {}", workerName, task.toString(), e.getMessage());
 
                     }
-                } else if (pool.getWorkerCount() > pool.getCorePoolSize())
+                } else if ( (currentWorkerCount = pool.getWorkerCount()) > pool.getCorePoolSize())
                 {
-                    logger.info("{} idle timeout, stopping.", workerName);
                     isRunning = false;
+                    isIdle = true;
+                    pool.workerShutdown(this);
+                    logger.info("{} idle timeout, stopping. workerCount = {}, corePoolSize = {}.",
+                            workerName, pool.getWorkerCount(), pool.getCorePoolSize());
+
+
+
                 } else {
-                    logger.info("{} idle timeout. Keep working by reason of corePoolSize.", workerName);
+                    isIdle = true;
+                    logger.info("{} idle timeout. Keep working by reason of corePoolSize. workerCount = {}, corePoolSize = {}.", workerName, currentWorkerCount, pool.getCorePoolSize());
                 }
             }
         } catch (InterruptedException e) {
@@ -121,9 +145,18 @@ public class Worker extends Thread {
 //            workers.remove(this);
         }
     }
-//    public BlockingQueue getTaskQueue(){
-//
-//        return taskQueue;
-//    }
+
+    public int getMaxWorkerQueueSize(){
+        return maxWorkerQueueSize;
+    }
+    public int checkMaxWorkerQueueSize(int currentQueueSize){
+
+        if(maxWorkerQueueSize < currentQueueSize){
+            maxWorkerQueueSize = currentQueueSize;
+        }
+        return maxWorkerQueueSize;
+    }
+
+
 }
 

@@ -32,8 +32,6 @@ public class CustomThreadExecutor implements CustomExecutor {
     private final int queueSize;
     private final int minSpareThreads;
 
-//    BalanceStrategy balanceStrategy = BalanceStrategy.ROUND_ROBIN;
-//    RejectionPolicy rejectionPolicy = RejectionPolicy.CALLER_RUNS;
     BalanceStrategy balanceStrategy;
     RejectionPolicy rejectionPolicy;
 
@@ -42,7 +40,9 @@ public class CustomThreadExecutor implements CustomExecutor {
     private final AtomicInteger workerCount = new AtomicInteger(0);
     private final AtomicInteger roundRobinCounter = new AtomicInteger(0);
 
-//    private final ExecutorStrategy executorStrategy;
+    private final AtomicInteger maxPoolQueueSize;
+
+    private final ConcurrentHashMap<Integer, Integer> mapWorkerQueue;
 
     private volatile boolean isShutdown = false;
 
@@ -57,6 +57,9 @@ public class CustomThreadExecutor implements CustomExecutor {
         this.minSpareThreads = Integer.parseInt(config.getProperty("minSpareThreads"));
         this.balanceStrategy = BalanceStrategy.valueOf(config.getProperty("balanceStrategy"));
         this.rejectionPolicy = RejectionPolicy.valueOf(config.getProperty("rejectionPolicy"));
+
+        this.maxPoolQueueSize = new AtomicInteger(0);
+        this.mapWorkerQueue = new ConcurrentHashMap<>();
 
         for (int i = 0; i < corePoolSize; i++) {
             workers.add(newWorker());
@@ -80,26 +83,6 @@ public class CustomThreadExecutor implements CustomExecutor {
         return config;
     }
 
-    public CustomThreadExecutor(int corePoolSize, int maxPoolSize, int queueSize, long keepAliveTime, TimeUnit timeUnit,
-                             int minSpareThreads, BalanceStrategy balanceStrategy, RejectionPolicy rejectionPolicy) {
-
-        this.config = getConfig("executor.properties");
-
-        this.corePoolSize = corePoolSize;
-        this.maxPoolSize = maxPoolSize;
-        this.keepAliveTime = keepAliveTime;
-        this.timeUnit = timeUnit;
-        this.queueSize = queueSize;
-        this.minSpareThreads = minSpareThreads;
-        this.balanceStrategy = balanceStrategy;
-        this.rejectionPolicy = rejectionPolicy;
-//        this.executorStrategy = new ExecutorStrategy();
-
-        for (int i = 0; i < corePoolSize; i++) {
-            workers.add(newWorker());
-        }
-    }
-
     private Worker newWorker() {
         if (workers.size() >= maxPoolSize) return null;
 //        BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(queueSize);
@@ -109,12 +92,22 @@ public class CustomThreadExecutor implements CustomExecutor {
         Worker worker = new Worker(this, queue, workerId, keepAliveTime, timeUnit);
 //        BlockingQueue<Runnable> taskQueue, int workerId, long keepAliveTime, TimeUnit timeUnit
 //        System.out.println("[ThreadFactory] Creating new thread: " + worker.getName());
+
+        mapWorkerQueue.put(worker.getWorkerId(), worker.getMaxWorkerQueueSize());
+
         worker.start();
         logger.info("[ThreadFactory] New worker thread {} is started.", worker.getWorkerName());
         return worker;
     }
 
-    public int getWorkerCount() {
+    public synchronized void checkMaxPoolQueueSize(int workerId, int maxWorkerQueueSize){
+        if(maxPoolQueueSize.get() < maxWorkerQueueSize){
+            maxPoolQueueSize.set(maxWorkerQueueSize);
+        }
+        mapWorkerQueue.put(workerId, maxWorkerQueueSize);
+    }
+
+    public synchronized int getWorkerCount() {
 //        return workers.size();
         return workerCount.get();
 
@@ -213,6 +206,45 @@ public class CustomThreadExecutor implements CustomExecutor {
 //        }
     }
 
+    public synchronized void workerShutdown(Worker worker){
+        int idleCount = 0;
+        for (Worker w : workers) {
+            if (w.isRunning() && w.isIdle()) idleCount++;
+//            if(!w.isRunning()) {
+//                workerCount.decrementAndGet();
+//                workers.remove(w);
+//            }
+        }
+        if(idleCount >= minSpareThreads){
+            worker.clearQueue();
+            worker.interrupt();
+            workerCount.decrementAndGet();
+            workers.remove(worker);
+
+            StringBuilder stringOutput = new StringBuilder();
+            stringOutput.append("Worker-" + worker.getWorkerId() + " is terminated.\n");
+            stringOutput.append(workers.stream()
+                    .map(w -> String.format("[%d - %s]",
+                            w.getWorkerId(),
+                            w.isRunning() ? "on" : "off"))
+                    .collect(Collectors.joining(", ")));
+            stringOutput.append("\nWorkerCount = " + getWorkerCount() + ", corePoolSize = " + corePoolSize + ".");
+//            System.out.println(stringOutput.toString());
+        }
+        if (idleCount < minSpareThreads && workers.size() < maxPoolSize) {
+//            workers.add(newWorker());
+            worker.setRunning(true);
+            worker.start();
+            StringBuilder stringOutput = new StringBuilder();
+            stringOutput.append("Worker-" + worker.getWorkerId() + " is restarted due minSpareThreads.");
+            stringOutput.append(workers.stream()
+                    .map(w -> String.format("[%d - %s]",
+                            w.getWorkerId(),
+                            w.isRunning() ? "running" : "stopped"))
+                    .collect(Collectors.joining(", ")));
+//            System.out.println(stringOutput.toString());
+        }
+    }
     @Override
     public <T> Future<T> submit(Callable<T> callable) {
         FutureTask<T> futureTask = new FutureTask<>(callable);
@@ -227,7 +259,22 @@ public class CustomThreadExecutor implements CustomExecutor {
 
         isShutdown = true;
 
-        logger.info("[Pool] Shutdown initiated.");
+//        logger.info("[Pool] Shutdown initiated.");
+        StringBuilder stringOutput = new StringBuilder();
+        mapWorkerQueue.entrySet()
+                .stream()
+                .sorted(java.util.Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                    stringOutput.append(
+                            String.format("Worker-%d -> MaxWorkerQueueSize = %d%n",
+                                    entry.getKey(), entry.getValue())
+                    );
+                });
+        int totalQueueSize = mapWorkerQueue.values().stream().mapToInt(Integer::intValue).sum();
+        stringOutput.append(String.format("Overall worker queues size = %d%n", totalQueueSize));
+
+        logger.info("[Custom Executor] Shutdown initiated. MaxQueueSize = {}\n{}", maxPoolQueueSize.get(),stringOutput.toString());
+
 
         for (Worker worker : workers) {
             worker.interrupt();
@@ -254,30 +301,30 @@ public class CustomThreadExecutor implements CustomExecutor {
 
     }
 
-    public static CustomThreadExecutor getCustomThreadExecutor(){
-        Properties config = new Properties();
-        try (InputStream is = Application.class.getClassLoader()
-                .getResourceAsStream("executor.properties")) {
-            if (is != null) {
-                config.load(is);
-            }
-        } catch (IOException e) {
-
-            logger.error("Failed to get executor settings: {}", e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
-        }
-        CustomThreadExecutor executor = new CustomThreadExecutor(
-                Integer.parseInt(config.getProperty("corePoolSize")),
-                Integer.parseInt(config.getProperty("maxPoolSize")),
-                Integer.parseInt(config.getProperty("queueSize")),
-                Long.parseLong(config.getProperty("keepAliveTime")),
-                TimeUnit.valueOf(config.getProperty("timeUnit")),
-                Integer.parseInt(config.getProperty("minSpareThreads")),
-                BalanceStrategy.valueOf(config.getProperty("balanceStrategy")),
-                RejectionPolicy.valueOf(config.getProperty("rejectionPolicy"))
-        );
-
-        return executor;
-    }
+//    public static CustomThreadExecutor getCustomThreadExecutor(){
+//        Properties config = new Properties();
+//        try (InputStream is = Application.class.getClassLoader()
+//                .getResourceAsStream("executor.properties")) {
+//            if (is != null) {
+//                config.load(is);
+//            }
+//        } catch (IOException e) {
+//
+//            logger.error("Failed to get executor settings: {}", e.getMessage());
+//            e.printStackTrace();
+//            System.exit(1);
+//        }
+//        CustomThreadExecutor executor = new CustomThreadExecutor(
+//                Integer.parseInt(config.getProperty("corePoolSize")),
+//                Integer.parseInt(config.getProperty("maxPoolSize")),
+//                Integer.parseInt(config.getProperty("queueSize")),
+//                Long.parseLong(config.getProperty("keepAliveTime")),
+//                TimeUnit.valueOf(config.getProperty("timeUnit")),
+//                Integer.parseInt(config.getProperty("minSpareThreads")),
+//                BalanceStrategy.valueOf(config.getProperty("balanceStrategy")),
+//                RejectionPolicy.valueOf(config.getProperty("rejectionPolicy"))
+//        );
+//
+//        return executor;
+//    }
 }

@@ -66,26 +66,23 @@ public class StandardThreadExecutor implements CustomExecutor {
 
     @Override
     public void execute(Runnable command) {
-//        executor.execute(command);
 
-        int currentQueueSize = executor.getQueue().size();
-
-        if(maxQueueSize.get() < currentQueueSize){
-            maxQueueSize.set(currentQueueSize);
-        };
-
-        logger.info("Executor state: ActiveThreads={}, QueueSize={}, PoolSize={}",
-                executor.getActiveCount(),
-                executor.getQueue().size(),
-                executor.getPoolSize());
-        logger.info("Queue: {}", executor.getQueue().stream()
-                .map(r -> (Task)r)
-//                .sorted((t1, t2) -> t2.getId() - t1.getId())
-                .sorted(Comparator.comparingInt(Task::getId).reversed())
-//                .map(task -> String.format("{id=%d, name='%s'}", task.getId(), task.getName()))
+//        int currentQueueSize = executor.getQueue().size();
+//
+//        if(maxQueueSize.get() < currentQueueSize){
+//            maxQueueSize.set(currentQueueSize);
+//        };
+//
+//        logger.info("Executor state: ActiveThreads={}, QueueSize={}, PoolSize={}",
+//                executor.getActiveCount(),
+//                executor.getQueue().size(),
+//                executor.getPoolSize());
+//        logger.info("Queue: {}", executor.getQueue().stream()
+//                .map(r -> (Task)r)
+//                .sorted(Comparator.comparingInt(Task::getId).reversed())
+//                .map(task -> "{" + task.getId() + "}")
 //                .collect(Collectors.joining(", ", "[", "]")));
-                .map(task -> "{" + task.getId() + "}")
-                .collect(Collectors.joining(", ", "[", "]")));
+
         executor.execute(command);
     }
 
