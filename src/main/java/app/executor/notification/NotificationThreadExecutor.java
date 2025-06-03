@@ -16,7 +16,7 @@ public class NotificationThreadExecutor implements CustomExecutor {
     ExecutorService executor;
     BlockingQueue<Runnable> workQueue;
 
-    ThreadFactory threadFactory = new CustomThreadFactory();
+    ThreadFactory threadFactory = new CustomThreadFactory("NotificationThread-");
 
     public NotificationThreadExecutor() {
         this.workQueue = new SynchronousQueue<>();

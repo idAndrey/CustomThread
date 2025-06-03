@@ -16,33 +16,22 @@ public class CustomThreadFactory implements ThreadFactory {
 //    private final int workerQueueSize;
     private final ThreadFactory defaultThreadFactory;// = Executors.defaultThreadFactory();
 
-    //thread creation counter
-    private final AtomicLong counter = new AtomicLong(0);
+    private final AtomicLong counter;
 
     private String prefix = "";
 
 
-    public CustomThreadFactory(int workerQueueSize, ThreadFactory defaultThreadFactory) {
-//        this.workerQueueSize = workerQueueSize;
-//        this.defaultThreadFactory = defaultThreadFactory;
-        this.defaultThreadFactory = Executors.defaultThreadFactory();
-    }
-
-    public CustomThreadFactory(int workerQueueSize) {
-//        this.workerQueueSize = workerQueueSize;
-        this.defaultThreadFactory = Executors.defaultThreadFactory();
-    }
 
     public CustomThreadFactory() {
-//        this.workerQueueSize = workerQueueSize;
+
         this.defaultThreadFactory = Executors.defaultThreadFactory();
-//        this.counter = new AtomicLong(0);
+        this.counter = new AtomicLong(0);
     }
 
     public CustomThreadFactory(String prefix) {
-//        this.workerQueueSize = workerQueueSize;
+
         this.defaultThreadFactory = Executors.defaultThreadFactory();
-//        this.counter = new AtomicLong(0);
+        this.counter = new AtomicLong(0);
         this.prefix = prefix;
     }
 

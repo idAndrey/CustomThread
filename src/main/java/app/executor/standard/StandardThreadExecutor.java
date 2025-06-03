@@ -1,22 +1,21 @@
 package app.executor.standard;
 
 import app.Application;
-import app.executor.custom.CustomThreadExecutor;
-import app.executor.factory.CustomExecutor;
-import app.executor.factory.CustomThreadFactory;
-import app.taskjob.Task;
+
+import app.executor.factory.CustomExecutorStatistic;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Comparator;
+
 import java.util.Properties;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
-public class StandardThreadExecutor implements CustomExecutor {
+
+public class StandardThreadExecutor implements CustomExecutorStatistic {
 
     private static final Logger logger = LoggerFactory.getLogger(StandardThreadExecutor.class);
 

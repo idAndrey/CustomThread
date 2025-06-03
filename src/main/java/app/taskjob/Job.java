@@ -40,10 +40,7 @@ public class Job implements Callable, PropertyChangeListener {
     private List<Task> tasks;
 
     private CustomExecutorFactory taskExecutorFactory;
-    private CustomThreadExecutor customThreadExecutor;
-    private ExecutorService standardThreadExecutor;
-    private CustomExecutorService customExecutorService;
-//    private ExecutorType executorType;
+
     private CustomExecutor taskExecutor;
 
 //    private final NotificationThreadExecutor notificationExecutor;
@@ -98,8 +95,6 @@ public class Job implements Callable, PropertyChangeListener {
 //        this.notificationThreadFactory = new CustomThreadFactory();
         this.notificationThreadFactory = new CustomThreadFactory("NotificationThread-");
 
-//        this.notificationExecutor = taskExecutorFactory.getExecutor(ExecutorType.NOTIFICATION);
-//        this.notificationExecutor = (NotificationThreadExecutor) taskExecutorFactory.getExecutor(ExecutorType.NOTIFICATION);
         this.notificationExecutor = Executors.newCachedThreadPool(notificationThreadFactory);
 
         this.startTime = 0;

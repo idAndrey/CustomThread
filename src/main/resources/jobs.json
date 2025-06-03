@@ -1,4 +1,14 @@
 [
+
+  {
+    "jobName": "DemonstrationJob",
+    "jobId": 549,
+    "taskCount": 1000,
+    "duration": 15,
+    "interval": 1,
+    "timeUnit": "MILLISECONDS",
+    "executorType": "CUSTOM"
+  },
   {
     "jobName": "DataProcessingJob",
     "jobId": 845,
@@ -15,16 +25,6 @@
     "duration": 10,
     "interval": 1,
     "timeUnit": "MINUTES",
-    "executorType": "CUSTOM"
-  },
-
-  {
-    "jobName": "DemonstrationJob",
-    "jobId": 549,
-    "taskCount": 1000,
-    "duration": 15,
-    "interval": 1,
-    "timeUnit": "MILLISECONDS",
     "executorType": "CUSTOM"
   }
 

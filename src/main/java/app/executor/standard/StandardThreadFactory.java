@@ -1,6 +1,5 @@
 package app.executor.standard;
 
-import app.executor.factory.CustomThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,9 +8,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class StandardThreadFactory implements ThreadFactory {
+
     private static final Logger logger = LoggerFactory.getLogger(StandardThreadFactory.class);
 
-    //    private final int workerQueueSize;
     private final ThreadFactory defaultThreadFactory;// = Executors.defaultThreadFactory();
 
     //thread creation counter
@@ -19,35 +18,13 @@ public class StandardThreadFactory implements ThreadFactory {
 
     private String prefix = "";
 
-
-    public StandardThreadFactory(int workerQueueSize, ThreadFactory defaultThreadFactory) {
-//        this.workerQueueSize = workerQueueSize;
-//        this.defaultThreadFactory = defaultThreadFactory;
-        this.defaultThreadFactory = Executors.defaultThreadFactory();
-    }
-
-    public StandardThreadFactory(int workerQueueSize) {
-//        this.workerQueueSize = workerQueueSize;
-        this.defaultThreadFactory = Executors.defaultThreadFactory();
-    }
-
-    public StandardThreadFactory() {
-//        this.workerQueueSize = workerQueueSize;
-        this.defaultThreadFactory = Executors.defaultThreadFactory();
-//        this.counter = new AtomicLong(0);
-    }
-
     public StandardThreadFactory(String prefix) {
-//        this.workerQueueSize = workerQueueSize;
-        this.defaultThreadFactory = Executors.defaultThreadFactory();
-//        this.counter = new AtomicLong(0);
         this.prefix = prefix;
+        this.defaultThreadFactory = Executors.defaultThreadFactory();
     }
 
     @Override
     public Thread newThread(Runnable r) {
-
-//        BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(workerQueueSize);
 
         // Добавляем логирование при завершении потока
         Runnable wrappedRunnable = () -> {

@@ -1,6 +1,7 @@
 package app.executor.custom;
 
 import app.executor.custom.strategy.WorkerStrategies;
+import app.executor.factory.CustomThreadFactory;
 import app.taskjob.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +32,14 @@ public class Worker extends Thread {
 //    private final RunnableExecutor strategyExecutor;
     private final WorkerStrategies workerStrategies;
 
-    public Worker(CustomThreadExecutor pool, BlockingQueue<Runnable> taskQueue, int workerId, long keepAliveTime, TimeUnit timeUnit) {
-        super("Worker-" + String.valueOf(workerId));
+    public Worker(      CustomThreadExecutor pool,
+                        BlockingQueue<Runnable> taskQueue,
+                        int workerId,
+                        long keepAliveTime,
+                        TimeUnit timeUnit,
+                        String workerNamePrefix) {
+        super(workerNamePrefix + String.valueOf(workerId));
+//        super(threadFactory);
         this.workerId = workerId;
         this.workerName = workerNamePrefix + String.valueOf(workerId);
         this.taskQueue = taskQueue;
