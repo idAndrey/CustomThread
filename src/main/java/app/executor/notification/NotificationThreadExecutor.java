@@ -1,6 +1,7 @@
 package app.executor.notification;
 
 import app.executor.factory.CustomExecutor;
+import app.executor.factory.CustomThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,13 +16,20 @@ public class NotificationThreadExecutor implements CustomExecutor {
     ExecutorService executor;
     BlockingQueue<Runnable> workQueue;
 
+    ThreadFactory threadFactory = new CustomThreadFactory("NotificationThread-");
+
     public NotificationThreadExecutor() {
         this.workQueue = new SynchronousQueue<>();
-        this.executor = Executors.newCachedThreadPool();
+        this.executor = Executors.newCachedThreadPool(threadFactory);
     }
 
     public ExecutorService getExecutor() {
-        return  this.executor;
+        return this.executor;
+    }
+
+    @Override
+    public int getTotalQueueSize(){
+        return workQueue.size();
     }
 
     @Override

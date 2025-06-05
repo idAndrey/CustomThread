@@ -1,44 +1,30 @@
-package app.executor.factory;
+package app.executor.standard;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class CustomThreadFactory implements ThreadFactory {
+public class StandardThreadFactory implements ThreadFactory {
 
-    private static final Logger logger = LoggerFactory.getLogger(CustomThreadFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger(StandardThreadFactory.class);
 
-//    private final int workerQueueSize;
     private final ThreadFactory defaultThreadFactory;// = Executors.defaultThreadFactory();
 
-    private final AtomicLong counter;
+    //thread creation counter
+    private final AtomicLong counter = new AtomicLong(0);
 
     private String prefix = "";
 
-
-
-    public CustomThreadFactory() {
-
-        this.defaultThreadFactory = Executors.defaultThreadFactory();
-        this.counter = new AtomicLong(0);
-    }
-
-    public CustomThreadFactory(String prefix) {
-
-        this.defaultThreadFactory = Executors.defaultThreadFactory();
-        this.counter = new AtomicLong(0);
+    public StandardThreadFactory(String prefix) {
         this.prefix = prefix;
+        this.defaultThreadFactory = Executors.defaultThreadFactory();
     }
 
     @Override
     public Thread newThread(Runnable r) {
-
-//        BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(workerQueueSize);
 
         // Добавляем логирование при завершении потока
         Runnable wrappedRunnable = () -> {

@@ -1,21 +1,21 @@
 package app.executor.standard;
 
 import app.Application;
-import app.executor.custom.CustomThreadExecutor;
-import app.executor.factory.CustomExecutor;
-import app.executor.factory.CustomThreadFactory;
-import app.taskjob.Task;
+
+import app.executor.factory.CustomExecutorStatistic;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Comparator;
+
 import java.util.Properties;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class StandardThreadExecutor implements CustomExecutor {
+
+public class StandardThreadExecutor implements CustomExecutorStatistic {
 
     private static final Logger logger = LoggerFactory.getLogger(StandardThreadExecutor.class);
 
@@ -24,7 +24,9 @@ public class StandardThreadExecutor implements CustomExecutor {
     ThreadPoolExecutor executor;
     BlockingQueue<Runnable> workQueue;
 
-    ThreadFactory threadFactory = new CustomThreadFactory();
+    private final AtomicInteger maxQueueSize;
+
+    ThreadFactory threadFactory = new StandardThreadFactory("Worker-");
 
     public StandardThreadExecutor(){
 
@@ -40,6 +42,8 @@ public class StandardThreadExecutor implements CustomExecutor {
                 threadFactory,
                 new ThreadPoolExecutor.AbortPolicy()
         );
+
+        this.maxQueueSize = new AtomicInteger(0);
     }
 
     private Properties getConfig(String fileName){
@@ -60,20 +64,29 @@ public class StandardThreadExecutor implements CustomExecutor {
     }
 
     @Override
+    public int getTotalQueueSize(){
+        return maxQueueSize.get();
+    }
+
+    @Override
     public void execute(Runnable command) {
-//        executor.execute(command);
-        logger.info("Executor state: ActiveThreads={}, QueueSize={}, PoolSize={}",
-                executor.getActiveCount(),
-                executor.getQueue().size(),
-                executor.getPoolSize());
-        logger.info("Queue: {}", executor.getQueue().stream()
-                .map(r -> (Task)r)
-//                .sorted((t1, t2) -> t2.getId() - t1.getId())
-                .sorted(Comparator.comparingInt(Task::getId).reversed())
-//                .map(task -> String.format("{id=%d, name='%s'}", task.getId(), task.getName()))
+
+        int currentQueueSize = executor.getQueue().size();
+
+        if(maxQueueSize.get() < currentQueueSize){
+            maxQueueSize.set(currentQueueSize);
+        };
+
+//        logger.info("Executor state: ActiveThreads={}, QueueSize={}, PoolSize={}",
+//                executor.getActiveCount(),
+//                executor.getQueue().size(),
+//                executor.getPoolSize());
+//        logger.info("Queue: {}", executor.getQueue().stream()
+//                .map(r -> (Task)r)
+//                .sorted(Comparator.comparingInt(Task::getId).reversed())
+//                .map(task -> "{" + task.getId() + "}")
 //                .collect(Collectors.joining(", ", "[", "]")));
-                .map(task -> "{" + task.getId() + "}")
-                .collect(Collectors.joining(", ", "[", "]")));
+
         executor.execute(command);
     }
 
@@ -87,7 +100,8 @@ public class StandardThreadExecutor implements CustomExecutor {
     @Override
     public void shutdown() {
         executor.shutdown();
-        logger.info("[Standard Executor] Shutdown initiated.");
+//        logger.info("[Standard Executor] Shutdown initiated.");
+        logger.info("[Standard Executor] Shutdown initiated. MaxQueueSize = {}", maxQueueSize.get());
     }
 
     @Override

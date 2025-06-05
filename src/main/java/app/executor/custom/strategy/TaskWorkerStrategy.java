@@ -9,7 +9,7 @@ public class TaskWorkerStrategy implements WorkerStrategy  {
     @Override
     public void run(Runnable runnable) {
         Task task = (Task) runnable;
-        System.out.println("[TaskStrategy] Preparing task: " + task.getName());
+
 //        task.prepare();
         task.run();
 //        task.cleanup();
@@ -20,9 +20,10 @@ public class TaskWorkerStrategy implements WorkerStrategy  {
         Task task = (Task) runnable;
         task.setState(TaskState.OFFERED);
         boolean offered = worker.offerTask(task);
-        System.out.println("\nFROM offerTask\n[" + worker.getWorkerName() + "]" +
-                " Queue #" + (worker.getWorkerId() - 1) + ": " + worker.getTaskQueue().toString() + "\n");
-//        if(offered) task.setState(TaskState.OFFERED);
+
+//        System.out.println("\nFROM offerTask\n[" + worker.getWorkerName() + "]" +
+//                " Queue #" + (worker.getWorkerId() - 1) + ": " + worker.getTaskQueue().toString() + "\n");
+
         return offered;
     }
 }

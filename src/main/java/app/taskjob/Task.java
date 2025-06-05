@@ -44,8 +44,8 @@ public class Task implements Runnable{
         this.state = TaskState.NEW;
         this.status = TaskStatus.NEW;
 
-//        this.notificationExecutor = notificationExecutor;
-        this.notificationExecutor = Executors.newCachedThreadPool();
+        this.notificationExecutor = notificationExecutor;
+//        this.notificationExecutor = Executors.newCachedThreadPool();
     }
 
     public String getName() {
@@ -53,59 +53,98 @@ public class Task implements Runnable{
     }
 
     public void setStatus(TaskStatus status) {
-        support.firePropertyChange(new PropertyChangeEvent(this,"status",this.status, status));
-        this.status = status;
+
+        setStatusThread(status);
+
+//        support.firePropertyChange(new PropertyChangeEvent(this,"status",this.status, status));
+//        this.status = status;
     }
 
-    public void setState(TaskState state) {
-        System.out.println("\nTask: " + this.id + " Number of listeners: " + support.getPropertyChangeListeners().length);
+    public void setStatusThread(TaskStatus status) {
+//        System.out.println("\nTask: " + this.id + " Number of listeners: " + support.getPropertyChangeListeners().length);
 
-        support.firePropertyChange(new PropertyChangeEvent(this,"state",this.state, state));
-        System.out.println("STATE notification is fired. Task: " + getName() +
-                "\nCurrent thread name: " + Thread.currentThread().getName() +
-                "\nThread groupe: " + Thread.currentThread().getThreadGroup() +
-                "\n"
+        TaskStatus oldValue = this.status;
+        TaskStatus newValue = status;
+        this.status = status;
+
+        PropertyChangeEvent pce = new PropertyChangeEvent(this,"status",oldValue, newValue);
+
+        this.notificationExecutor.execute(()->{
+                    try{
+                        this.support.firePropertyChange(pce);
+
+//                        System.out.println("STATUS notification is fired. " + getName());
+
+//                        System.out.println("STATUS notification is fired. " + getName() +
+////                        "\nCurrent executor name: " + notificationExecutor .getName() +
+//                                        "\nCurrent thread name: " + Thread.currentThread().getName() +
+////                                        "ActiveCount: " + this.notificationExecutor.
+//                                        "\nThread group: " + Thread.currentThread().getThreadGroup().getName() +
+//                                        "\n"
+//                        );
+                    } catch (Exception e) {
+                        System.out.println("Exception: " + e.getMessage());
+                    }
+                }
+
         );
 
-        this.state = state;
+    }
+
+
+    public void setState(TaskState state) {
+
+        setStateThread(state);
+
+//        System.out.println("\nTask: " + this.id + " Number of listeners: " + support.getPropertyChangeListeners().length);
+//
+//        TaskState oldState = this.state;
+//        TaskState newState = state;
+//        this.state = state;
+//
+//        PropertyChangeEvent pce = new PropertyChangeEvent(this,"state",oldState, newState);
+//
+//        support.firePropertyChange(pce);
+//
+//        System.out.println("STATE notification is fired. Task: " + getName() +
+//                "\nCurrent thread name: " + Thread.currentThread().getName() +
+//                "\nThread group: " + Thread.currentThread().getThreadGroup() +
+//                "\n"
+//        );
     }
 
     public void setStateThread(TaskState state) {
-        System.out.println("\nNumber of listeners: " + support.getPropertyChangeListeners().length);
+//        System.out.println("\nTask: " + this.id + " Number of listeners: " + support.getPropertyChangeListeners().length);
+
+        TaskState oldValue = this.state;
+        TaskState newValue = state;
         this.state = state;
+
+        PropertyChangeEvent pce = new PropertyChangeEvent(this,"state",oldValue, newValue);
+
         this.notificationExecutor.execute(()->{
             try{
-                this.support.firePropertyChange(new PropertyChangeEvent(this,"state",this.state, state));
-                System.out.println("STATE notification is fired."+
-                        "\nCurrent thread name: " + Thread.currentThread().getName() +
-                        "\nThread groupe: " + Thread.currentThread().getThreadGroup() +
-                        "\n"
-                );
+                this.support.firePropertyChange(pce);
+
+//                System.out.println("STATE notification is fired. " + getName());
+
+//                System.out.println("STATE notification is fired. " + getName() +
+////                        "\nCurrent executor name: " + notificationExecutor .getName() +
+//                        "\nCurrent thread name: " + Thread.currentThread().getName() +
+//                        "\nThread group: " + Thread.currentThread().getThreadGroup().getName() +
+//                        "\n"
+//                );
             } catch (Exception e) {
-                System.out.println("Exeption: " + e.getMessage());
+                System.out.println("Exception: " + e.getMessage());
             }
                 }
 
         );
 
-//        Thread thread = new Thread(
-//                new Runnable() {
-//
-//                    @Override
-//                    public void run() {
-//
-//                    }
-//                }
-//        );
-//
-//        ExecutorService executorService = Executors.newCachedThreadPool().execute(
-
-//        );
-
     }
 
     public void addPropertyChangeListener(PropertyChangeListener pcl) {
-        System.out.println("Adding listener: " + pcl);
+//        System.out.println("Adding listener: " + pcl);
         support.addPropertyChangeListener(pcl);
     }
 

@@ -12,20 +12,27 @@ public class JobsReader {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static List<Job> readJobsFromResources(String resourcePath) throws IOException {
+    public static List<Job> readJobsFromResources(String resourcePath)  {
+        List<Job> jobs = null;
         try (InputStream inputStream = JobsReader.class.getClassLoader().getResourceAsStream(resourcePath)) {
             if (inputStream == null) {
                 throw new IOException("Resource not found: " + resourcePath);
             }
 
             // Читаем JSON как список объектов Job
-            List<Job> jobs = objectMapper.readValue(inputStream, new TypeReference<List<Job>>() {});
+            jobs = objectMapper.readValue(inputStream, new TypeReference<List<Job>>() {});
 
             // Валидация
             validateJobs(jobs);
 
-            return jobs;
+
+        } catch (IOException e) {
+//            logger.error("Failed to get job list: {}", e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+//            throw new RuntimeException(e);
         }
+        return jobs;
     }
 
     private static void validateJobs(List<Job> jobs) {

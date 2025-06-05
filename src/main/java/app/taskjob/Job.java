@@ -3,10 +3,7 @@ package app.taskjob;
 import app.executor.custom.AbortedExecutionException;
 import app.executor.custom.CustomThreadExecutor;
 import app.executor.custom.DiscardedExecutionException;
-import app.executor.factory.CustomExecutor;
-import app.executor.factory.CustomExecutorFactory;
-import app.executor.factory.CustomExecutorService;
-import app.executor.factory.ExecutorType;
+import app.executor.factory.*;
 import app.executor.notification.NotificationThreadExecutor;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Job implements Callable, PropertyChangeListener {
 
@@ -31,8 +29,10 @@ public class Job implements Callable, PropertyChangeListener {
     private final TimeUnit timeUnit;
     private final long duration;
     private final long interval;
+    private final ExecutorType executorType;
 
-    public JobStatus jobStatus;
+//    public volatile JobStatus jobStatus;
+    public final AtomicReference<JobStatus> jobStatus;
 
     private final long durationMS;
     private final long intervalMS;
@@ -40,19 +40,19 @@ public class Job implements Callable, PropertyChangeListener {
     private List<Task> tasks;
 
     private CustomExecutorFactory taskExecutorFactory;
-    private CustomThreadExecutor customThreadExecutor;
-    private ExecutorService standardThreadExecutor;
-    private CustomExecutorService customExecutorService;
-    private ExecutorType executorType;
+
     private CustomExecutor taskExecutor;
-//    private NotificationThreadExecutor notificationExecutor;
+
+//    private final NotificationThreadExecutor notificationExecutor;
+    private ThreadFactory notificationThreadFactory;
     private ExecutorService notificationExecutor;
 
     private final AtomicInteger startedTaskCount;
     private final AtomicInteger offeredTaskCount;
 //    int offeredTaskCount = 0;
     private final AtomicInteger rejectedTaskCountAtomic;
-    private final AtomicInteger completedTaskCount;
+    private final AtomicInteger completedTaskCountAtomic;
+    private final AtomicInteger currentTaskCountAtomic;
 
     int rejectedTaskCount = 0;
     int abortedTaskCount = 0;
@@ -68,15 +68,19 @@ public class Job implements Callable, PropertyChangeListener {
                @JsonProperty("taskCount") int taskCount,
                @JsonProperty("duration") long duration,
                @JsonProperty("interval") long interval,
-               @JsonProperty("timeUnit") TimeUnit timeUnit) {
+               @JsonProperty("timeUnit") TimeUnit timeUnit,
+               @JsonProperty("executorType") ExecutorType executorType
+               ) {
         this.jobName = jobName;
         this.jobId = jobId;
         this.taskCount = taskCount;
         this.duration = duration;
         this.interval = interval;
         this.timeUnit = timeUnit;
+        this.executorType = executorType;
 
-        this.jobStatus = JobStatus.NEW;
+//        this.jobStatus = JobStatus.NEW;
+        this.jobStatus = new AtomicReference<>(JobStatus.NEW);
 
         this.durationMS = timeUnit.toMillis(duration);
         this.intervalMS = timeUnit.toMillis(interval);
@@ -84,12 +88,18 @@ public class Job implements Callable, PropertyChangeListener {
         this.offeredTaskCount = new AtomicInteger(0);
         this.startedTaskCount = new AtomicInteger(0);
         this.rejectedTaskCountAtomic = new AtomicInteger(0);
-        this.completedTaskCount = new AtomicInteger(0);
+        this.completedTaskCountAtomic = new AtomicInteger(0);
+        this.currentTaskCountAtomic = new AtomicInteger(0);
 
         this.taskExecutorFactory = new CustomExecutorFactory();
-//        this.notificationExecutor = taskExecutorFactory.getExecutor(ExecutorType.NOTIFICATION);
+//        this.notificationThreadFactory = new CustomThreadFactory();
+        this.notificationThreadFactory = new CustomThreadFactory("NotificationThread-");
 
-        this.notificationExecutor = Executors.newCachedThreadPool();
+        this.notificationExecutor = Executors.newCachedThreadPool(notificationThreadFactory);
+
+        this.startTime = 0;
+        this.endTime = 0;
+        this.totalTime = 0;
 
         this.tasks = new ArrayList<>();
     }
@@ -151,8 +161,17 @@ public class Job implements Callable, PropertyChangeListener {
             }
         }
 
+        while(!jobStatus.compareAndSet(JobStatus.COMPLETED, JobStatus.COMPLETED)){
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         JobResult result = new JobResult(
-                rejectedTaskCount,
+                completedTaskCountAtomic.get(),
+                rejectedTaskCountAtomic.get(),
                 abortedTaskCount,
                 discardedTaskCount,
                 startTime,
@@ -189,14 +208,21 @@ public class Job implements Callable, PropertyChangeListener {
         double avgTime = executedTasks > 0 ? (double) totalTime / executedTasks : 0.0;
         DecimalFormat df = new DecimalFormat("#.#######");
 
-        logger.info("=============== Result job processing info ===============");
-        logger.info("📊 Job mane: {}, task count: {}, task duration: {} {}.", jobName, taskCount, duration, unitNames[timeUnit.ordinal()]);
+        logger.info("                                                                ");
+        logger.info("============= Result job processing info =============");
+        logger.info("📊 Job mane: {}, Executor type: {}", jobName, executorType);
+        logger.info("Task count: {}, Duration: {} {}, Interval: {} {}",  taskCount, duration, unitNames[timeUnit.ordinal()], interval, unitNames[timeUnit.ordinal()]);
+        logger.info("-------------------------------------------------");
         logger.info("⏱ Total time: {} ms", totalTime);
         logger.info("✅ Completed tasks: {}", executedTasks);
         logger.info("❌ Aborted tasks: {}", jobResult.abortedTaskCount);
         logger.info("❌ Rejected tasks: {}", jobResult.rejectedTaskCount);
         logger.info("❌ Discarded tasks: {}", jobResult.discardedTaskCount);
         logger.info("⏲ Average time per task: {} ms", df.format(avgTime));
+        logger.info("📚 Total queue size: {} tasks", taskExecutor.getTotalQueueSize());
+        logger.info("-------------------------------------------------\n");
+
+
     }
 
     public String getJobName() {
@@ -231,22 +257,22 @@ public class Job implements Callable, PropertyChangeListener {
 //        this.executor = executor;
 //    }
 
-    public void setCustomExecutorService(CustomExecutorService customExecutorService) {
-        this.customExecutorService = customExecutorService;
-        this.standardThreadExecutor = customExecutorService.getStandardThreadExecutor();
-        this.customThreadExecutor = customExecutorService.getCustomThreadExecutor();
-    }
+//    public void setCustomExecutorService(CustomExecutorService customExecutorService) {
+//        this.customExecutorService = customExecutorService;
+//        this.standardThreadExecutor = customExecutorService.getStandardThreadExecutor();
+//        this.customThreadExecutor = customExecutorService.getCustomThreadExecutor();
+//    }
 
     public ExecutorType getExecutorType() {
         return executorType;
     }
 
     public void setExecutorType(ExecutorType executorType) {
-        this.executorType = executorType;
+//        this.executorType = executorType;
     }
 
     @Override
-    public void propertyChange(PropertyChangeEvent evt) {
+    public synchronized void propertyChange(PropertyChangeEvent evt) {
         Task task = (Task) evt.getSource();
         String propertyName = evt.getPropertyName();
 
@@ -257,23 +283,12 @@ public class Job implements Callable, PropertyChangeListener {
                 TaskState oldValue = (TaskState) evt.getOldValue();
                 TaskState newValue = (TaskState) evt.getNewValue();
 
-                System.out.println("\n\nFROM propertyChange" + " task = " + task.getName() +
-                        "\npropertyName: " + propertyName +
-                        "\noldValue: " + oldValue +
-                        "\nnewValue: " + newValue +
-                        "\ntask: " + task.getName() +
-                        "\nOldValue = NEW : " + oldValue.equals(TaskState.NEW) + " and " +
-                        "NewValue = OFFERED : " + newValue.equals(TaskState.OFFERED) +
-                        "\n"
-                );
-
-                if(evt.getOldValue().equals(TaskState.NEW) && evt.getNewValue().equals(TaskState.OFFERED)){
-
-                    offeredTaskCount.incrementAndGet();
-                    System.out.println("\nofferedTaskCount = " + offeredTaskCount);
-                    if(offeredTaskCount.get() == taskCount) System.out.println("\n\n\nJob STARTED\n\n");
-                }
-
+//                System.out.println("STATE changed." +
+//                        "\nCurrent task = " + task.getName() + " New value = " + task.state +
+//                        "\ncurrentTaskCountAtomic = " + currentTaskCountAtomic.get() +
+//                        "\ncompletedTaskCountAtomic = " + completedTaskCountAtomic.get() +
+//                        "\nrejectedTaskCountAtomic = " + rejectedTaskCountAtomic.get() +
+//                        "\n");
             }
             case "status" -> {
                 TaskStatus oldValue = (TaskStatus) evt.getOldValue();
@@ -283,16 +298,25 @@ public class Job implements Callable, PropertyChangeListener {
                     rejectedTaskCountAtomic.incrementAndGet();
                 }
                 if(newValue.equals(TaskStatus.COMPLETED)) {
-                    completedTaskCount.incrementAndGet();
+                    completedTaskCountAtomic.incrementAndGet();
                 }
+
+//                System.out.println("STATUS changed." +
+//                        "\nCurrent task = " + task.getName() + " New value = " + task.status +
+//                        "\ncurrentTaskCountAtomic = " + currentTaskCountAtomic.get() +
+//                        "\ncompletedTaskCountAtomic = " + completedTaskCountAtomic.get() +
+//                        "\nrejectedTaskCountAtomic = " + rejectedTaskCountAtomic.get() +
+//                        "\n");
             }
         }
 
-        if(rejectedTaskCountAtomic.get() + completedTaskCount.get() == taskCount){
-            jobStatus = JobStatus.COMPLETED;
+        currentTaskCountAtomic.set(rejectedTaskCountAtomic.get() + completedTaskCountAtomic.get());
+        if(currentTaskCountAtomic.compareAndSet(taskCount,taskCount)){
+//            jobStatus = JobStatus.COMPLETED;
+            jobStatus.set(JobStatus.COMPLETED);
             endTime = System.currentTimeMillis();
             totalTime = endTime - startTime;
-            logger.info("Job #{} completed. Duration: {} ms", jobName, totalTime);
+            logger.info("Job #{} completed. Duration: {} ms. Task = {}.", jobName, totalTime, task.getName());
         }
     }
     public boolean shutdownExecutor(){
@@ -306,6 +330,20 @@ public class Job implements Callable, PropertyChangeListener {
                 taskExecutor.shutdown();
             }
         }
+
+        notificationExecutor.shutdown();
+
         return true;
+    }
+
+    public void printTaskStatus(){
+
+        System.out.println("\nTask execution result:");
+        for(Task task: tasks){
+            System.out.println("Task: " + task.getName() +
+                    " state: " + task.state +
+                    " status: " + task.status );
+        }
+        System.out.println("\n\n");
     }
 }
