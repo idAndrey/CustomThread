@@ -40,6 +40,7 @@ public class Application {
                 return;
             }
         } else {
+            executorType = ExecutorType.STANDARD;
             logger.info("Тип пула потоков не передан.");
             logger.info("Установлен стандартный тип пул потоков, executorType = '{}'", executorType);
         }
