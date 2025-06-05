@@ -21,6 +21,8 @@ public class Application {
 
     public static void main(String[] args) {
 
+//        System.out.println("Проверка кодировки");
+
         ExecutorType executorType = ExecutorType.STANDARD;
         if (args.length > 0) {
             String executorTypeString = args[0];
